@@ -1,19 +1,19 @@
 package rongxchen.investment.models.dto.users;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
 @Data
 public class LoginDTO {
 
-    @NotNull(message = "Email cannot be null")
+    @NotBlank(message = "Email cannot be null")
     @Email(message = "Invalid email format")
     private String email;
 
-    @NotNull(message = "Password cannot be null")
-    @Min(value = 8, message = "Password must be at least 8 characters long")
+    @NotBlank(message = "Password cannot be null")
+    @Length(min = 8, message = "Password must be at least 8 characters long")
     private String password;
 
 }
