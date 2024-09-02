@@ -16,8 +16,14 @@ public class Response<T> {
         return new Response<T>().statusCode(HttpStatus.OK.value());
     }
 
-    public static Response<Object> failed(String message) {
-        return builder()
+    public static <T> Response<T> success(T data) {
+        return new Response<T>().statusCode(HttpStatus.OK.value())
+                .message("success")
+                .body(data);
+    }
+
+    public static <T> Response<T> failed(String message) {
+        return new Response<T>()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .message(message);
     }

@@ -15,4 +15,8 @@ public class DateUtil {
         );
     }
 
+    public static long toMillis(LocalDateTime dateTime) {
+        return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
 }

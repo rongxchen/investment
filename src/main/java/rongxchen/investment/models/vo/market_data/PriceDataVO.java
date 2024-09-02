@@ -6,17 +6,13 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class PriceData {
+public class PriceDataVO {
 
     private String ticker;
-
-    private String productType;
-
-    private String productSubType;
 
     private String market;
 
     @JsonProperty("items")
-    private List<CandleStick> priceList;
+    private List<CandleStickVO> priceList;
 
 }
