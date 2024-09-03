@@ -1,5 +1,6 @@
 package rongxchen.investment.controllers;
 
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,9 +18,9 @@ public class PriceController {
     private final CryptoPriceService cryptoPriceService;
 
     @GetMapping("/crypto")
-    public Response<PriceDataVO> getCryptoPrice(@RequestParam String ticker,
-                                                @RequestParam String interval,
-                                                @RequestParam int size) {
+    public Response<PriceDataVO> getCryptoPrice(@RequestParam(defaultValue = "") String ticker,
+                                                @RequestParam(defaultValue = "") String interval,
+                                                @RequestParam(defaultValue = "100") @Max(500) int size) {
         PriceDataVO cryptoPrice = cryptoPriceService.getCryptoPrice(ticker, interval, size);
         return Response.success(cryptoPrice);
     }
