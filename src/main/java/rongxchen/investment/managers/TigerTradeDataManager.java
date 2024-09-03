@@ -4,7 +4,6 @@ import cn.hutool.json.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
-import org.json.JSONException;
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 import rongxchen.investment.enums.Interval;
