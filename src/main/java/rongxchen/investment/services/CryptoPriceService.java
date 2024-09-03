@@ -33,7 +33,7 @@ public class CryptoPriceService {
             return vo;
         }
         // convert to price data
-        vo.setTicker(priceList.get(0).getTicker());
+        vo.setTicker(ticker);
         List<CandleStickVO> candleStickList = new ArrayList<>();
         for (CryptoPrice price : priceList) {
             CandleStickVO candleStick = new CandleStickVO();

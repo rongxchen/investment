@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="rongxchen.investment.mappers.EquityPriceMapper">
+
+    <insert id="insertOrUpdateBatch" parameterType="java.util.List">
+        INSERT INTO equity_prices (company_name, ticker, market, datetime, open, high, low, close, volume, trading_currency, `interval`, source, update_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.companyName},
+                #{item.ticker},
+                #{item.market},
+                #{item.datetime},
+                #{item.open},
+                #{item.high},
+                #{item.low},
+                #{item.close},
+                #{item.volume},
+                #{item.tradingCurrency},
+                #{item.interval},
+                #{item.source},
+                #{item.updateTime}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            market = VALUES(market),
+            open = VALUES(open),
+            high = VALUES(high),
+            low = VALUES(low),
+            close = VALUES(close),
+            volume = VALUES(volume),
+            trading_currency = VALUES(trading_currency),
+            update_time = VALUES(update_time)
+    </insert>
+
+</mapper>
