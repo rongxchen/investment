@@ -12,11 +12,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Log
 @RequiredArgsConstructor
 public class TigerTradeDataManager {
+
+    private Integer retryCount = 0;
 
     private final Map<String, String> TIGER_INTERVAL_MAPPING = new HashMap<>();
 
@@ -28,22 +32,40 @@ public class TigerTradeDataManager {
         TIGER_INTERVAL_MAPPING.put(Interval.ONE_MONTH.getInterval(), "month");
     }
 
+    private boolean obtainToken() {
+        String url = Constants.TIGER_TRADE_FOR_TOKEN_URL;
+        try {
+            String body = Jsoup.connect(url)
+                    .get().html();
+            Pattern tokenPattern = Pattern.compile("\"access_token\":\"(.*?)\"");
+            Matcher matcher = tokenPattern.matcher(body);
+            if (matcher.find()) {
+                Constants.TIGER_TRADE_KLINE_TOKEN = matcher.group(1);
+                log.info("Obtained TigerTrade token: " + Constants.TIGER_TRADE_KLINE_TOKEN);
+                return true;
+            }
+        } catch (IOException e) {
+            log.warning(e.getMessage());
+        }
+        return false;
+    }
+
     public void syncEquityPrice(String ticker, String market, String interval) {
         if (!TIGER_INTERVAL_MAPPING.containsKey(interval)) {
             log.warning("invalid interval mapping for TigerTrade mapping: " + interval);
             return;
         }
-        interval = TIGER_INTERVAL_MAPPING.get(interval);
+        String tigerTradeInterval = TIGER_INTERVAL_MAPPING.get(interval);
         long timestamp = System.currentTimeMillis();
         market = market.toLowerCase();
-        String url = "hk".equals(market) ? String.format(Constants.TIGER_TRADE_KLINE_URL_HK, interval, ticker, timestamp)
-                : ("us".equals(market) ? String.format(Constants.TIGER_TRADE_KLINE_URL_US, interval, ticker, timestamp)
+        String url = "hk".equals(market) ? String.format(Constants.TIGER_TRADE_KLINE_URL_HK, tigerTradeInterval, ticker, timestamp)
+                : ("us".equals(market) ? String.format(Constants.TIGER_TRADE_KLINE_URL_US, tigerTradeInterval, ticker, timestamp)
                 : "");
         try {
             String body = Jsoup.connect(url)
                     .userAgent(Constants.HTTP_USER_AGENT)
                     .ignoreContentType(true)
-                    .header("Authorization", "Bearer " + "eyJhbGciOiJFUzI1NiIsImtpZCI6IjVVQzB5NGhnUXUiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE3Mjc1NDQyMDUsImlzcyI6IkNITiIsIm5vbmNlIjoiV1RjRnZPOHE0UTdjb3FSTXI1OUFvZ0o0V0R5U3F2ZWZLMzJZNGFwQnJEVkR3bUdvalEifQ.C26m6z_dRInnfoIDf5o9utgqHoFxVWYvTQpF-BgJJEHFZoUc-BGiTi5wnY4o7URu_7vXy3unz3IVFsVxPvkoFA")
+                    .header("Authorization", "Bearer " + Constants.TIGER_TRADE_KLINE_TOKEN)
                     .execute().body();
             JSONObject entries = objectMapper.readValue(body, JSONObject.class);
             boolean isItemsPresent = entries.containsKey("items");
@@ -56,6 +78,10 @@ public class TigerTradeDataManager {
                 System.out.println(item);
             }
         } catch (IOException e) {
+            if (this.retryCount == 0 && this.obtainToken()) {
+                this.syncEquityPrice(ticker, market, interval);
+                this.retryCount++;
+            }
             log.warning("failed to connect to TigerTrade API");
             log.warning("detailed exception message: " + e.getMessage());
         }
