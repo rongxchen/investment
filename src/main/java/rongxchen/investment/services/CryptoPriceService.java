@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import rongxchen.investment.exceptions.DataException;
 import rongxchen.investment.mappers.CryptoPriceMapper;
 import rongxchen.investment.models.po.CryptoPrice;
 import rongxchen.investment.models.vo.market_data.CandleStickVO;
@@ -26,13 +27,12 @@ public class CryptoPriceService {
         wrapper.orderByAsc(CryptoPrice::getDatetime);
         wrapper.last("limit " + size);
         // query from db
-        PriceDataVO vo = new PriceDataVO();
         List<CryptoPrice> priceList = cryptoPriceMapper.selectList(wrapper);
         if (CollUtil.isEmpty(priceList)) {
-            vo.setPriceList(new ArrayList<>());
-            return vo;
+            throw new DataException("no price data found for " + ticker);
         }
         // convert to price data
+        PriceDataVO vo = new PriceDataVO();
         vo.setTicker(ticker);
         List<CandleStickVO> candleStickList = new ArrayList<>();
         for (CryptoPrice price : priceList) {

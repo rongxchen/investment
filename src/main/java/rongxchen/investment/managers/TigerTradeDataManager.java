@@ -6,9 +6,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
+import rongxchen.investment.enums.EquitySource;
 import rongxchen.investment.enums.Interval;
+import rongxchen.investment.mappers.EquityPriceMapper;
+import rongxchen.investment.models.po.EquityPrice;
+import rongxchen.investment.util.DateUtil;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +29,8 @@ public class TigerTradeDataManager {
     private Integer retryCount = 0;
 
     private final Map<String, String> TIGER_INTERVAL_MAPPING = new HashMap<>();
+
+    private final EquityPriceMapper equityPriceMapper;
 
     private final ObjectMapper objectMapper;
 
@@ -68,14 +76,38 @@ public class TigerTradeDataManager {
                     .header("Authorization", "Bearer " + Constants.TIGER_TRADE_KLINE_TOKEN)
                     .execute().body();
             JSONObject entries = objectMapper.readValue(body, JSONObject.class);
+            boolean isDetailPresent = entries.containsKey("detail");
             boolean isItemsPresent = entries.containsKey("items");
-            if (!isItemsPresent) {
+            if (!isItemsPresent || !isDetailPresent) {
                 log.warning("TigerTrade returns no items for ticker: " + ticker);
                 return;
             }
+            JSONObject detail = entries.getBean("detail", JSONObject.class);
             List<JSONObject> items = entries.getBeanList("items", JSONObject.class);
+            List<EquityPrice> equityPriceList = new ArrayList<>();
             for (JSONObject item : items) {
-                System.out.println(item);
+                EquityPrice equityPrice = new EquityPrice();
+                equityPrice.setCompanyName(detail.getStr("nameCN"));
+                equityPrice.setTicker(entries.getStr("symbol"));
+                equityPrice.setMarket(detail.getStr("market"));
+                equityPrice.setDatetime(DateUtil.fromMillis(item.getLong("time")));
+                equityPrice.setOpen(item.getDouble("open"));
+                equityPrice.setHigh(item.getDouble("high"));
+                equityPrice.setLow(item.getDouble("low"));
+                equityPrice.setClose(item.getDouble("close"));
+                equityPrice.setVolume(item.getDouble("volume"));
+                equityPrice.setInterval(interval);
+                equityPrice.setSource(EquitySource.TIGER_TRADE.getSource());
+                equityPrice.setUpdateTime(LocalDate.now());
+                equityPriceList.add(equityPrice);
+                if (equityPriceList.size() == Constants.MYBATIS_BATCH_SAVE_SIZE) {
+                    equityPriceMapper.insertOrUpdateBatch(equityPriceList);
+                    equityPriceList.clear();
+                }
+            }
+            if (!equityPriceList.isEmpty()) {
+                equityPriceMapper.insertOrUpdateBatch(equityPriceList);
+                equityPriceList.clear();
             }
         } catch (IOException e) {
             if (this.retryCount == 0 && this.obtainToken()) {
@@ -85,11 +117,6 @@ public class TigerTradeDataManager {
             log.warning("failed to connect to TigerTrade API");
             log.warning("detailed exception message: " + e.getMessage());
         }
-    }
-
-    public static void main(String[] args) {
-        TigerTradeDataManager manager = new TigerTradeDataManager(new ObjectMapper());
-        manager.syncEquityPrice("NVDA", "us", "1d");
     }
 
 }
