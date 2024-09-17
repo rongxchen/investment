@@ -8,6 +8,7 @@ import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 import rongxchen.investment.enums.EquitySource;
 import rongxchen.investment.enums.Interval;
+import rongxchen.investment.enums.Market;
 import rongxchen.investment.mappers.EquityPriceMapper;
 import rongxchen.investment.models.po.EquityPrice;
 import rongxchen.investment.util.DateUtil;
@@ -58,16 +59,16 @@ public class TigerTradeDataManager {
         return false;
     }
 
-    public void syncEquityPrice(String ticker, String market, String interval) {
+    public void syncEquityPrice(String ticker, Market market, String interval) {
         if (!TIGER_INTERVAL_MAPPING.containsKey(interval)) {
             log.warning("invalid interval mapping for TigerTrade mapping: " + interval);
             return;
         }
         String tigerTradeInterval = TIGER_INTERVAL_MAPPING.get(interval);
         long timestamp = System.currentTimeMillis();
-        market = market.toLowerCase();
-        String url = "hk".equals(market) ? String.format(Constants.TIGER_TRADE_KLINE_URL_HK, tigerTradeInterval, ticker, timestamp)
-                : ("us".equals(market) ? String.format(Constants.TIGER_TRADE_KLINE_URL_US, tigerTradeInterval, ticker, timestamp)
+        String marketString = market.getMarket().toLowerCase();
+        String url = "hk".equals(marketString) ? String.format(Constants.TIGER_TRADE_KLINE_URL_HK, tigerTradeInterval, ticker, timestamp)
+                : ("us".equals(marketString) ? String.format(Constants.TIGER_TRADE_KLINE_URL_US, tigerTradeInterval, ticker, timestamp)
                 : "");
         try {
             String body = Jsoup.connect(url)

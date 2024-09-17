@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import rongxchen.investment.enums.Market;
 import rongxchen.investment.exceptions.DataException;
 import rongxchen.investment.managers.TigerTradeDataManager;
 import rongxchen.investment.mappers.EquityPriceMapper;
@@ -25,7 +26,7 @@ public class EquityPriceService {
 
     private final TigerTradeDataManager tigerTradeDataManager;
 
-    public PriceDataVO getEquityPriceList(String ticker, String market, String interval, int size) {
+    public PriceDataVO getEquityPriceList(String ticker, Market market, String interval, int size) {
         LambdaQueryWrapper<EquityPrice> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(EquityPrice::getTicker, ticker);
         queryWrapper.eq(EquityPrice::getInterval, interval);
@@ -39,7 +40,11 @@ public class EquityPriceService {
             }
             this.retryCount++;
             tigerTradeDataManager.syncEquityPrice(ticker, market, interval);
-            this.getEquityPriceList(ticker, market, interval, size);
+            return this.getEquityPriceList(ticker, market, interval, size);
+        } else {
+            if (this.retryCount == 1) {
+                this.retryCount--;
+            }
         }
         PriceDataVO vo = new PriceDataVO();
         vo.setTicker(ticker);
