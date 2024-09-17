@@ -24,4 +24,18 @@ public class GlobalExceptionHandler {
                 .message(e.getMessage());
     }
 
+    @ExceptionHandler(DataException.class)
+    public Response<Object> handleDataException(DataException e) {
+        return Response.builder()
+                .statusCode(500)
+                .message(e.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public Response<Object> handleException(Exception e) {
+        return Response.builder()
+                .statusCode(500)
+                .message(e.getMessage());
+    }
+
 }
