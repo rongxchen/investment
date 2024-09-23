@@ -12,7 +12,10 @@ import rongxchen.investment.models.po.EquityPrice;
 import rongxchen.investment.models.vo.market_data.CandleStickVO;
 import rongxchen.investment.models.vo.market_data.PriceDataVO;
 import rongxchen.investment.util.DateUtil;
+import rongxchen.investment.util.TradingDateUtil;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +37,8 @@ public class EquityPriceService {
         queryWrapper.last("limit " + size);
         // find equity price list
         List<EquityPrice> equityPriceList = equityPriceMapper.selectList(queryWrapper);
-        if (CollUtil.isEmpty(equityPriceList)) {
+        LocalDateTime latestDatetime = equityPriceMapper.findLatestDatetime(ticker, market.getMarket(), interval);
+        if (CollUtil.isEmpty(equityPriceList) || !TradingDateUtil.getLastTradingDate(LocalDate.now()).equals(latestDatetime.toLocalDate())) {
             if (this.retryCount != 0) {
                 throw new DataException("no price data found for " + ticker);
             }

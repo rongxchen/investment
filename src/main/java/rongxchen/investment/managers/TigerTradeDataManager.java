@@ -15,6 +15,7 @@ import rongxchen.investment.util.DateUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -87,11 +88,12 @@ public class TigerTradeDataManager {
             List<JSONObject> items = entries.getBeanList("items", JSONObject.class);
             List<EquityPrice> equityPriceList = new ArrayList<>();
             for (JSONObject item : items) {
+                LocalDateTime dateTime = DateUtil.fromMillis(item.getLong("time"));
                 EquityPrice equityPrice = new EquityPrice();
                 equityPrice.setCompanyName(detail.getStr("nameCN"));
                 equityPrice.setTicker(entries.getStr("symbol"));
                 equityPrice.setMarket(detail.getStr("market"));
-                equityPrice.setDatetime(DateUtil.fromMillis(item.getLong("time")));
+                equityPrice.setDatetime(dateTime);
                 equityPrice.setOpen(item.getDouble("open"));
                 equityPrice.setHigh(item.getDouble("high"));
                 equityPrice.setLow(item.getDouble("low"));
