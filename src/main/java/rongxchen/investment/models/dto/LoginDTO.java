@@ -1,4 +1,4 @@
-package rongxchen.investment.models.dto.users;
+package rongxchen.investment.models.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

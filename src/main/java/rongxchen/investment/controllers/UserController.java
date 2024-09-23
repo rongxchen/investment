@@ -4,8 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import rongxchen.investment.models.Response;
-import rongxchen.investment.models.dto.users.LoginDTO;
-import rongxchen.investment.models.dto.users.RegisterDTO;
+import rongxchen.investment.models.dto.LoginDTO;
+import rongxchen.investment.models.dto.RegisterDTO;
 import rongxchen.investment.services.UserService;
 
 @RestController
